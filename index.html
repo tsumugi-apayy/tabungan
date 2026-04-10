@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabungan Couple</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
+    </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800">
+
+    <nav class="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100 px-4 py-4">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <div class="bg-pink-500 p-2 rounded-lg">
+                    <i class="fa-solid fa-vault text-white"></i>
+                </div>
+                <h1 class="text-xl font-black tracking-tight text-slate-900">OURV2L</h1>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <div class="relative flex-1 md:w-48">
+                    <i class="fa-solid fa-user absolute left-3 top-3 text-slate-400 text-[10px]"></i>
+                    <input type="text" id="searchName" onkeyup="applyFilters()" 
+                        placeholder="Cari nama..." 
+                        class="w-full pl-8 pr-4 py-2 bg-slate-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-pink-300 outline-none transition">
+                </div>
+                <div class="relative flex-1 md:w-48">
+                    <i class="fa-solid fa-calendar-day absolute left-3 top-3 text-slate-400 text-[10px] z-10 pointer-events-none"></i>
+                    <input type="date" id="searchDate" onchange="applyFilters()" 
+                        class="w-full pl-8 pr-4 py-2 bg-slate-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-pink-300 outline-none transition">
+                </div>
+                <button onclick="resetFilters()" class="p-2 text-slate-400 hover:text-rose-500 transition">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="p-4 sm:p-8 max-w-5xl mx-auto">
+        
+        <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between mb-8 overflow-hidden relative">
+            <div class="z-10">
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-1">Total Tabungan Kita</p>
+                <h2 id="totalBalance" class="text-4xl sm:text-5xl font-black text-slate-900">
+                    Rp 0
+                </h2>
+                <p id="filterIndicator" class="text-pink-500 text-[10px] font-bold mt-2 uppercase hidden">Menampilkan hasil pencarian</p>
+            </div>
+            <div class="absolute -right-4 opacity-[0.03] rotate-12">
+                <i class="fa-solid fa-coins text-[10rem]"></i>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-5">
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm sticky top-28">
+                    <h3 class="font-bold text-lg mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-plus text-pink-500"></i> Catatan Baru
+                    </h3>
+                    
+                    <p class="text-[11px] font-bold text-pink-500 mb-6 flex items-center gap-1">
+                        <i class="fa-regular fa-clock"></i> Waktu saat ini: <span id="clock">00:00:00</span> WIB
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">Waktu Input (Otomatis WIB)</label>
+                            <input type="text" id="displayDate" disabled 
+                                class="w-full mt-1 p-3 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-100 text-slate-400 text-sm font-semibold">
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">Nama Penabung</label>
+                            <input type="text" id="inputName" placeholder="Contoh: Ayang" 
+                                class="w-full mt-1 p-3 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-pink-400 outline-none transition font-semibold">
+                        </div>
+                        
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">Jumlah (Rp)</label>
+                            <input type="number" id="inputAmount" placeholder="0" 
+                                class="w-full mt-1 p-3 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-pink-400 outline-none transition font-semibold">
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">Keterangan / Alasan</label>
+                            <textarea id="inputNote" rows="2" placeholder="Ketik alasan menabung atau denda..." 
+                                class="w-full mt-1 p-3 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-pink-400 outline-none transition resize-none text-sm"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 pt-2">
+                            <button onclick="saveEntry('IN')" class="bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-black active:scale-95 transition-all shadow-lg">
+                                NABUNG
+                            </button>
+                            <button onclick="saveEntry('OUT')" class="bg-white border-2 border-slate-900 text-slate-900 py-4 rounded-2xl font-bold hover:bg-slate-50 active:scale-95 transition-all">
+                                PAKAI
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7">
+                <div id="logContainer" class="space-y-3">
+                    </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        let logs = JSON.parse(localStorage.getItem('couple_vault_jakarta')) || [];
+
+        // Fungsi mendapatkan waktu Jakarta (WIB)
+        function getJakartaTime() {
+            const now = new Date();
+            const dateOptions = { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' };
+            const timeOptions = { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            
+            const dateStr = new Intl.DateTimeFormat('en-CA', dateOptions).format(now); // YYYY-MM-DD
+            const timeStr = new Intl.DateTimeFormat('id-ID', timeOptions).format(now); // HH:MM:SS
+            
+            return { dateStr, timeStr };
+        }
+
+        // Script Jam Real-time di Form
+        setInterval(() => {
+            const current = getJakartaTime();
+            const clockEl = document.getElementById('clock');
+            if(clockEl) clockEl.innerText = current.timeStr;
+        }, 1000);
+
+        function updateDisplayDate() {
+            const data = getJakartaTime();
+            const parts = data.dateStr.split('-');
+            document.getElementById('displayDate').value = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function renderLogs(dataToRender = logs) {
+            const container = document.getElementById('logContainer');
+            const totalDisplay = document.getElementById('totalBalance');
+            const indicator = document.getElementById('filterIndicator');
+            
+            container.innerHTML = '';
+            
+            let totalActual = logs.reduce((acc, curr) => curr.type === 'IN' ? acc + curr.amount : acc - curr.amount, 0);
+            totalDisplay.innerText = `Rp ${totalActual.toLocaleString('id-ID')}`;
+
+            const isFiltering = dataToRender.length !== logs.length;
+            indicator.classList.toggle('hidden', !isFiltering);
+
+            const sorted = [...dataToRender].sort((a, b) => b.id - a.id);
+
+            sorted.forEach(item => {
+                const parts = item.date.split('-');
+                const beautyDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+                container.innerHTML += `
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex justify-between items-center transition-all hover:scale-[1.01]">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl ${item.type === 'IN' ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'} flex items-center justify-center text-sm">
+                                <i class="fa-solid ${item.type === 'IN' ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                                    ${beautyDate} • <span class="text-pink-500">${item.time || '00:00'} WIB</span> • ${item.name}
+                                </p>
+                                <p class="font-bold text-slate-700 leading-tight">${item.note || 'Tanpa keterangan'}</p>
+                            </div>
+                        </div>
+                        <div class="text-right ml-4">
+                            <p class="${item.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'} font-black whitespace-nowrap">
+                                ${item.type === 'IN' ? '+' : '-'}Rp ${item.amount.toLocaleString('id-ID')}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (dataToRender.length === 0) {
+                container.innerHTML = `<div class="text-center py-20 text-slate-300 font-medium italic">Data tidak ditemukan...</div>`;
+            }
+        }
+
+        function saveEntry(type) {
+            const name = document.getElementById('inputName').value;
+            const amount = document.getElementById('inputAmount').value;
+            const note = document.getElementById('inputNote').value;
+            const currentTime = getJakartaTime(); // Ambil tanggal & jam otomatis
+
+            if (!name || !amount) {
+                alert("Nama dan nominal harus diisi ya!");
+                return;
+            }
+
+            const newEntry = {
+                id: Date.now(),
+                date: currentTime.dateStr,
+                time: currentTime.timeStr.substring(0, 5), // Simpan jam:menit saja
+                name: name,
+                amount: parseInt(amount),
+                note: note,
+                type: type
+            };
+
+            logs.push(newEntry);
+            localStorage.setItem('couple_vault_jakarta', JSON.stringify(logs));
+            
+            document.getElementById('inputAmount').value = '';
+            document.getElementById('inputNote').value = '';
+            
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const nameTerm = document.getElementById('searchName').value.toLowerCase();
+            const dateTerm = document.getElementById('searchDate').value; 
+
+            const filtered = logs.filter(log => {
+                const matchName = log.name.toLowerCase().includes(nameTerm);
+                const matchDate = dateTerm === "" || log.date === dateTerm;
+                return matchName && matchDate;
+            });
+
+            renderLogs(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('searchName').value = '';
+            document.getElementById('searchDate').value = '';
+            renderLogs(logs);
+        }
+
+        // Initialize
+        updateDisplayDate();
+        renderLogs();
+    </script>
+</body>
+</html>
