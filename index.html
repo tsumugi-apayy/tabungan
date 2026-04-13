@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tabungan Couple</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -115,135 +114,75 @@
         </div>
     </main>
 
-    <script>
-        const SUPABASE_URL = 'https://xbsxouplbkfbtsevovyw.supabase.co'; // Salin dari Project URL
-        const SUPABASE_KEY = 'sb_publishable_q7uATbPHQlIyPXhc9H_5rQ_bIkJ9PvC'; // Salin dari Publishable Key
-        
-        let logs = JSON.parse(localStorage.getItem('couple_vault_jakarta')) || [];
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        // Fungsi mendapatkan waktu Jakarta (WIB)
-        function getJakartaTime() {
-            const now = new Date();
-            const dateOptions = { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' };
-            const timeOptions = { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-            
-            const dateStr = new Intl.DateTimeFormat('en-CA', dateOptions).format(now); // YYYY-MM-DD
-            const timeStr = new Intl.DateTimeFormat('id-ID', timeOptions).format(now); // HH:MM:SS
-            
-            return { dateStr, timeStr };
+<script>
+    // 1. KONFIGURASI (Pastikan URL & KEY sudah benar)
+    const SUPABASE_URL = 'https://xbsxouplbkfbtsevovyw.supabase.co';
+    const SUPABASE_KEY = 'MASUKKAN_ANON_KEY_KAMU_DI_SINI';
+    
+    // Inisialisasi dengan cara yang lebih stabil
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let logs = [];
+
+    // 2. FUNGSI AMBIL DATA
+    async function fetchLogs() {
+        console.log("Mencoba mengambil data...");
+        const { data, error } = await supabase
+            .from('logs')
+            .select('*')
+            .order('id', { ascending: false });
+
+        if (error) {
+            console.error('Gagal ambil data:', error.message);
+        } else {
+            console.log("Data berhasil diambil:", data);
+            logs = data;
+            renderLogs(); 
         }
+    }
 
-        // Script Jam Real-time di Form
-        setInterval(() => {
-            const current = getJakartaTime();
-            const clockEl = document.getElementById('clock');
-            if(clockEl) clockEl.innerText = current.timeStr;
-        }, 1000);
+    // 3. FUNGSI SIMPAN DATA
+    async function saveEntry(type) {
+        const name = document.getElementById('inputName').value;
+        const amount = document.getElementById('inputAmount').value;
+        const note = document.getElementById('inputNote').value;
+        const currentTime = getJakartaTime();
 
-        function updateDisplayDate() {
-            const data = getJakartaTime();
-            const parts = data.dateStr.split('-');
-            document.getElementById('displayDate').value = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
+        if (!name || !amount) return alert("Isi dulu ya!");
 
-        function renderLogs(dataToRender = logs) {
-            const container = document.getElementById('logContainer');
-            const totalDisplay = document.getElementById('totalBalance');
-            const indicator = document.getElementById('filterIndicator');
-            
-            container.innerHTML = '';
-            
-            let totalActual = logs.reduce((acc, curr) => curr.type === 'IN' ? acc + curr.amount : acc - curr.amount, 0);
-            totalDisplay.innerText = `Rp ${totalActual.toLocaleString('id-ID')}`;
+        const newEntry = {
+            name: name,
+            amount: parseInt(amount),
+            note: note,
+            type: type,
+            date: currentTime.dateStr,
+            time: currentTime.timeStr.substring(0, 5)
+        };
 
-            const isFiltering = dataToRender.length !== logs.length;
-            indicator.classList.toggle('hidden', !isFiltering);
+        console.log("Mengirim data...", newEntry);
 
-            const sorted = [...dataToRender].sort((a, b) => b.id - a.id);
+        const { error } = await supabase.from('logs').insert([newEntry]);
 
-            sorted.forEach(item => {
-                const parts = item.date.split('-');
-                const beautyDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-
-                container.innerHTML += `
-                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex justify-between items-center transition-all hover:scale-[1.01]">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-xl ${item.type === 'IN' ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'} flex items-center justify-center text-sm">
-                                <i class="fa-solid ${item.type === 'IN' ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
-                            </div>
-                            <div>
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                                    ${beautyDate} • <span class="text-pink-500">${item.time || '00:00'} WIB</span> • ${item.name}
-                                </p>
-                                <p class="font-bold text-slate-700 leading-tight">${item.note || 'Tanpa keterangan'}</p>
-                            </div>
-                        </div>
-                        <div class="text-right ml-4">
-                            <p class="${item.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'} font-black whitespace-nowrap">
-                                ${item.type === 'IN' ? '+' : '-'}Rp ${item.amount.toLocaleString('id-ID')}
-                            </p>
-                        </div>
-                    </div>
-                `;
-            });
-
-            if (dataToRender.length === 0) {
-                container.innerHTML = `<div class="text-center py-20 text-slate-300 font-medium italic">Data tidak ditemukan...</div>`;
-            }
-        }
-
-        function saveEntry(type) {
-            const name = document.getElementById('inputName').value;
-            const amount = document.getElementById('inputAmount').value;
-            const note = document.getElementById('inputNote').value;
-            const currentTime = getJakartaTime(); // Ambil tanggal & jam otomatis
-
-            if (!name || !amount) {
-                alert("Nama dan nominal harus diisi ya!");
-                return;
-            }
-
-            const newEntry = {
-                id: Date.now(),
-                date: currentTime.dateStr,
-                time: currentTime.timeStr.substring(0, 5), // Simpan jam:menit saja
-                name: name,
-                amount: parseInt(amount),
-                note: note,
-                type: type
-            };
-
-            logs.push(newEntry);
-            localStorage.setItem('couple_vault_jakarta', JSON.stringify(logs));
-            
+        if (error) {
+            console.error('Gagal simpan:', error.message);
+            alert("Gagal simpan: " + error.message);
+        } else {
+            console.log("Simpan berhasil!");
             document.getElementById('inputAmount').value = '';
             document.getElementById('inputNote').value = '';
-            
-            applyFilters();
+            fetchLogs();
         }
+    }
 
-        function applyFilters() {
-            const nameTerm = document.getElementById('searchName').value.toLowerCase();
-            const dateTerm = document.getElementById('searchDate').value; 
-
-            const filtered = logs.filter(log => {
-                const matchName = log.name.toLowerCase().includes(nameTerm);
-                const matchDate = dateTerm === "" || log.date === dateTerm;
-                return matchName && matchDate;
-            });
-
-            renderLogs(filtered);
-        }
-
-        function resetFilters() {
-            document.getElementById('searchName').value = '';
-            document.getElementById('searchDate').value = '';
-            renderLogs(logs);
-        }
-
-        // Initialize
+    // Pastikan ini dipanggil saat halaman siap
+    document.addEventListener('DOMContentLoaded', () => {
         updateDisplayDate();
-        renderLogs();
-    </script>
+        fetchLogs();
+    });
+
+    // --- Sisakan fungsi renderLogs() dan getJakartaTime() milikmu di bawah ---
+</script>
 </body>
 </html>
